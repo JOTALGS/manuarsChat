@@ -10,6 +10,6 @@ async def get_chat_history(chat_id: int) -> Dict:
     return manager.get_chat_history(chat_id)
 
 @router.get("/chats")
-async def get_all_chats() -> List[int]:
+async def get_all_chats() -> Dict:
     """Get all available chat IDs"""
-    return list(manager.chat_history.keys())
+    return manager.get_all_chats()
