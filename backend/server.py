@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 from routes import router
 from models import manager
-from llm import get_llm_response
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-##SERVER CONFIGURATION
 app = FastAPI()
 
 app.add_middleware(
@@ -19,7 +21,13 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api", tags=["Chats", "Messages"])
 
-##WEBSOCKET CONFIGURATION
+API_KEY = os.getenv("API_KEY")
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+chat = model.start_chat(history=[])
+
+# WebSocket Configuration
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     await manager.connect(websocket, user_id)
@@ -30,23 +38,33 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
                 parsed_data = json.loads(data)
             except json.JSONDecodeError:
                 print(f"Invalid JSON data received.\nData: {type(data)}\nData: {data}")
-                raise WebSocketDisconnect 
+                raise WebSocketDisconnect
+            
             chat_id = parsed_data.get("chat_id")
             user_message = parsed_data.get("message")
 
-            # Save the user's message
+            if not chat_id or not user_message:
+                print(f"Missing chat_id or message in received data: {parsed_data}")
+                raise WebSocketDisconnect
+
             manager.save_message(user_id, chat_id, user_message, is_bot=False)
 
-            # Get LLM response
-            llm_response = await get_llm_response(user_message)
+            try:
+                llm_response = chat.send_message(str(user_message), stream=True)
+            except Exception as e:
+                print(f"Error while getting response from Gemini: {e}")
+                llm_response = "Unable to generate a response."
 
-            # Save the LLM's response
-            manager.save_message(user_id, chat_id, llm_response, is_bot=True)
+            response_text = ""
 
-            # Send the response back to the user
+            for chunk in llm_response:
+                response_text += chunk.text
+            print(f"LLM Response: {response_text}")
+            manager.save_message(user_id, chat_id, response_text, is_bot=True)
+
             await manager.send_message(user_id, json.dumps({
                 "chat_id": chat_id,
-                "message": llm_response,
+                "message": response_text,
                 "is_bot": True
             }))
     except WebSocketDisconnect:

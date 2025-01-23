@@ -1,15 +1,22 @@
 import React from 'react';
 import { Provider } from 'react-redux';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import store from './stores/reduxStore';
-import Chat from './Components/Chat';
-import { Box } from '@mui/material';
+import Welcome from './pages/Welcome';
+import Login from './pages/Login';
+import Home from './pages/Home';
 
 const App = () => {
   return (
     <Provider store={store}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw' }}>
-        <Chat userId={1}/>
-      </Box>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
     </Provider>
   );
 };

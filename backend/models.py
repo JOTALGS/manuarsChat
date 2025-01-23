@@ -15,7 +15,6 @@ class Chat(Base):
     chat_name = Column(String(255))
     created_at = Column(Float, default=time.time)
     
-    # Relationship with messages
     messages = relationship("Message", back_populates="chat")
 
 
@@ -29,7 +28,6 @@ class Message(Base):
     timestamp = Column(Float, default=time.time)
     is_bot = Column(Boolean, default=False)
     
-    # Relationship with chat
     chat = relationship("Chat", back_populates="messages")
 
 # Database connection
@@ -62,7 +60,6 @@ class ConnectionManager:
             del self.active_connections[user_id]
 
     def save_message(self, user_id: int, chat_id: int, content: str, chat_name: Optional[str] = None, is_bot: bool = False):
-        # Get or create chat
         chat = self.db.query(Chat).filter(Chat.id == chat_id).first()
         if not chat:
             chat = Chat(id=chat_id, chat_name=chat_name or f"Chat {chat_id}")
@@ -70,7 +67,6 @@ class ConnectionManager:
         elif chat_name:
             chat.chat_name = chat_name
 
-        # Create and save message
         message = Message(
             chat_id=chat_id,
             user_id=user_id,
@@ -119,7 +115,6 @@ class ConnectionManager:
         if not chats:
             return {}
         
-        # Create a structured list of chat details
         chat_list = [
             {
                 "chat_id": chat.id,

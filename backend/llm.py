@@ -1,6 +1,7 @@
 import random
 import asyncio
 
+
 async def get_llm_response(user_message: str) -> str:
     """Simulate an LLM response with some delay"""
     # Simulate processing time

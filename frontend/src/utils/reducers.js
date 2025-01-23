@@ -4,6 +4,7 @@ const initialState = {
   messages: [],
   inputMessage: '',
   currentRoom: null,
+  chatName: '',
 };
 
 const chatReducer = (state = initialState, action) => {
@@ -17,6 +18,8 @@ const chatReducer = (state = initialState, action) => {
       return { ...state, inputMessage: action.payload };
     case 'SET_CURRENT_ROOM':
       return { ...state, currentRoom: action.payload };
+    case 'SET_CHAT_NAME':
+      return { ...state, chatName: action.payload };
     default:
       return state;
   }

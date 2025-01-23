@@ -6,7 +6,7 @@ export const initializeWebSocket = (url, onMessage) => {
   };
   
   ws.onmessage = (event) => {
-    console.log('Received message:', event.data);
+    //console.log('Received message:', event.data);
     try {
       const message = event.data;
       onMessage(message);

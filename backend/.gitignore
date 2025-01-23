@@ -1,2 +1,4 @@
 /wsvenv
+/venv
 /__pycache__
+.env
