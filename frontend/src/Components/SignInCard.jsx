@@ -13,6 +13,10 @@ import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
+import { useNavigate } from "react-router-dom";
+
+import { useSelector, useDispatch } from 'react-redux';
+import { setToken, clearToken } from '../utils/actions';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -32,12 +36,14 @@ const Card = styled(MuiCard)(({ theme }) => ({
   }),
 }));
 
-export default function SignInCard() {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+export default function SignInCard({ purpose }) {
+  const token = useSelector((state) => state.token);
+  const dispatch = useDispatch();
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const apiUrl = import.meta.env.VITE_PROD_URL;
+  const navigate = useNavigate();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -47,32 +53,48 @@ export default function SignInCard() {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (passwordError) {
       return;
     }
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
+    const username = data.get('username');
+    const password = data.get('password');
+    const email = data.get('email');
+    const endpoint = purpose === 'login' ? 'login' : 'users';
+    const payload = purpose === 'login' ? { username, password } : { username, password, email };
+
+    const response = await fetch(`http://${apiUrl}/api/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
+
+    if (response.ok) {
+        const data = await response.json();
+        
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        console.log(localStorage.getItem('access_token'));
+        dispatch(setToken(data.refresh_token));
+        if (purpose === 'login') {
+            navigate("/home");
+        } else {
+            navigate("/login");
+        }
+
+        return data;
+    } else {
+        throw new Error("Login failed");
+    }
+
   };
 
   const validateInputs = () => {
-    const email = document.getElementById('email');
     const password = document.getElementById('password');
 
     let isValid = true;
-
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address.');
-      isValid = false;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage('');
-    }
 
     if (!password.value || password.value.length < 6) {
       setPasswordError(true);
@@ -96,7 +118,7 @@ export default function SignInCard() {
         variant="h4"
         sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
       >
-        Sign in
+        {purpose === 'login' ? 'Sign in' : 'Sign up'}
       </Typography>
       <Box
         component="form"
@@ -105,34 +127,50 @@ export default function SignInCard() {
         sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
       >
         <FormControl>
-          <FormLabel htmlFor="email">Email</FormLabel>
+          <FormLabel htmlFor="username">Username</FormLabel>
           <TextField
-            error={emailError}
-            helperText={emailErrorMessage}
-            id="email"
-            type="email"
-            name="email"
-            placeholder="your@email.com"
-            autoComplete="email"
+            id="username"
+            type="text"
+            name="username"
+            placeholder="username"
+            autoComplete="username"
             autoFocus
             required
             fullWidth
             variant="outlined"
-            color={emailError ? 'error' : 'primary'}
+            color='primary'
           />
         </FormControl>
+        {purpose === 'register' && (
+          <FormControl>
+            <FormLabel htmlFor="email">Email</FormLabel>
+            <TextField
+              id="email"
+              type="email"
+              name="email"
+              placeholder="email@example.com"
+              autoComplete="email"
+              required
+              fullWidth
+              variant="outlined"
+              color="primary"
+            />
+          </FormControl>
+        )}
         <FormControl>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <FormLabel htmlFor="password">Password</FormLabel>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: 'baseline' }}
-            >
-              Forgot your password?
-            </Link>
+            {purpose === 'login' && (
+              <Link
+                component="button"
+                type="button"
+                onClick={handleClickOpen}
+                variant="body2"
+                sx={{ alignSelf: 'baseline' }}
+              >
+                Forgot your password?
+              </Link>
+            )}
           </Box>
           <TextField
             error={passwordError}
@@ -149,23 +187,25 @@ export default function SignInCard() {
             color={passwordError ? 'error' : 'primary'}
           />
         </FormControl>
-        <FormControlLabel
-          control={<Checkbox value="remember" color="primary" />}
-          label="Remember me"
-        />
+        {purpose === 'login' && (
+          <FormControlLabel
+            control={<Checkbox value="remember" color="primary" />}
+            label="Remember me"
+          />
+        )}
         <ForgotPassword open={open} handleClose={handleClose} />
         <Button type="submit" fullWidth variant="contained" onClick={validateInputs}>
-          Sign in
+          {purpose === 'login' ? 'Sign in' : 'Sign up'}
         </Button>
         <Typography sx={{ textAlign: 'center' }}>
-          Don&apos;t have an account?{' '}
+          {purpose === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <span>
             <Link
-              href="/material-ui/getting-started/templates/sign-in/"
+              href={purpose === 'login' ? '/register' : '/login'}
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
-              Sign up
+              {purpose === 'login' ? 'Sign up' : 'Sign in'}
             </Link>
           </span>
         </Typography>

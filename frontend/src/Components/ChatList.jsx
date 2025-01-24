@@ -12,10 +12,10 @@ const ChatList = ({ chats, onChatSelect }) => {
       sx={{ width: '100%', maxWidth: 300, padding: 2, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', bgcolor: '#966579' }}
     >
       <h2 style={{ color: 'rgba(254, 138, 198, 0.22)', fontSize: '2rem' }}>Chats history</h2>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 600, overflowY: 'auto', width: '100%', '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none', backgroundColor: 'rgba(254, 138, 198, 0.22)', borderRadius: 2, padding: 1  }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 550, overflowY: 'auto', width: '100%', '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none', backgroundColor: 'rgba(254, 138, 198, 0.22)', borderRadius: 2, padding: 1  }}>
         {chats.map((chat) => (
           <ListItem
-            key={chat.chat_id}
+            key={chat.id}
             disableGutters
             secondaryAction={
               <IconButton aria-label="comment">
@@ -33,7 +33,7 @@ const ChatList = ({ chats, onChatSelect }) => {
             }}
             onClick={() => onChatSelect(chat.chat_id)}
           >
-            <ListItemText primary={chat.chat_name} />
+            <ListItemText primary={chat.name} />
           </ListItem>
         ))}
       </Box>

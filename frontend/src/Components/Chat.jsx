@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Paper } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, TextField, Button, Paper, Slide } from '@mui/material';
 import { initializeWebSocket } from '../utils/websocket';
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessage, setInputMessage } from '../utils/actions';
@@ -15,10 +15,21 @@ const Chat = ({ userId, chatId, history }) => {
   const { messages, inputMessage, currentRoom } = useSelector((state) => state);
   const [ws, setWs] = useState(null);
   const displayMessages = history ? history.messages : messages;
-  const chatName = history ? history.chat_name : "currentRoom";
+  const chatName = history ? history.chat_name : "New Chat";
+  const apiUrl = import.meta.env.VITE_PROD_URL;
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const socketUrl = `ws://35.199.103.104:8000/ws/chat/${userId}`;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollTo({
+        top: messagesEndRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [displayMessages]);
+
+  useEffect(() => {
+    const socketUrl = `ws://${apiUrl}/ws/chat/${userId}`;
     const socket = initializeWebSocket(socketUrl, (message) => {
       const parsedMessage = JSON.parse(message);
       dispatch(addMessage({"chat_id": chatId, "user_id": userId, "content": parsedMessage.message, is_bot: true}));
@@ -64,9 +75,16 @@ const Chat = ({ userId, chatId, history }) => {
           zIndex: 0,
         }}
       />
-      <h2 style={{ color: '#d40659', fontSize: '25px', fontFamily: 'sans-serif' }}>Current Chat: {chatName}</h2>
-      <Paper elevation={3} style={{ padding: '16px', overflowY: 'auto', height: '70%', width: '85%', position: 'relative', zIndex: 1000, backgroundColor: '#ffefe8' }}>
+      <h2 style={{ color: '#d40659', fontSize: '35px', fontFamily: '"Jersey 10", sans-serif' }}>Current Chat: {chatName}</h2>
+      <Paper ref={messagesEndRef} elevation={3} style={{ padding: '16px', overflowY: 'auto', height: '70%', width: '85%', position: 'relative', zIndex: 1000, backgroundColor: '#ffefe8' }}>
         {displayMessages.map((msg, index) => (
+          <Slide
+            key={index}
+            direction="up" // Slide direction
+            in={true} // Control the visibility of the transition
+            mountOnEnter
+            unmountOnExit
+          >
           <Box
             key={index}
             style={{
@@ -96,33 +114,46 @@ const Chat = ({ userId, chatId, history }) => {
               {msg.content}
             </Box>
           </Box>
+          </Slide>
         ))}
       </Paper>
 
+      {!history && (
       <Box display="flex" mt={2} sx={{ width: '80%' }}>
-        <TextField
-          label="Ask a question"
-          fullWidth
-          value={inputMessage}
-          variant="filled"
-          sx={{ backgroundColor: 'white', borderRadius: '4px' }}
-          onChange={(e) => dispatch(setInputMessage(e.target.value))}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-        />
-        <Button
-          sx={{ marginLeft: '8px' }}
-          variant="contained"
-          color="primary"
-          onClick={sendMessage}
-        >
-          Send
-        </Button>
+          <TextField
+            label="Ask a question"
+            fullWidth
+            value={inputMessage}
+            variant="filled"
+            sx={{ backgroundColor: 'white', borderRadius: '4px' }}
+            onChange={(e) => dispatch(setInputMessage(e.target.value))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+          />
+          <Button
+            sx={{ marginLeft: '8px' }}
+            variant="contained"
+            color="primary"
+            onClick={sendMessage}
+          >
+            Send
+          </Button>
       </Box>
+      )}
+      {history && (
+      <Button
+        sx={{ margin: '8px' }}
+        variant="contained"
+        color="primary"
+        onClick={() => window.location.reload()} // Reload the page
+      >
+        New Chat
+      </Button>
+      )}
     </Box>
   );
 };
