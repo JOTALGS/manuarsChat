@@ -15,7 +15,7 @@ const ChatList = ({ chats, onChatSelect }) => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 550, overflowY: 'auto', width: '100%', '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none', backgroundColor: 'rgba(254, 138, 198, 0.22)', borderRadius: 2, padding: 1  }}>
         {chats.map((chat) => (
           <ListItem
-            key={chat.id}
+            key={chat.chat_id}
             disableGutters
             secondaryAction={
               <IconButton aria-label="comment">

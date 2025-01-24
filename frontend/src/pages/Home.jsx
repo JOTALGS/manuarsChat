@@ -16,7 +16,7 @@ const Home = () => {
     const fetchUserId = async () => {
       const token = localStorage.getItem('access_token');
       try {
-        const response = await fetch(`http://${apiUrl}/api/users/me`, {
+        const response = await fetch(`https://${apiUrl}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -35,7 +35,7 @@ const Home = () => {
     }
     const fetchStoredChats = async () => {
       try {
-        const response = await fetch(`http://${apiUrl}/api/chats/${userId}`);
+        const response = await fetch(`https://${apiUrl}/api/chats/${userId}`);
         const data = await response.json();
         if (data.chats && data.chats.length > 0) {
           setChats(data.chats);
@@ -52,7 +52,7 @@ const Home = () => {
     const handleChatClick = async (chatId) => {
       console.log('Clicked Chat ID:', chatId);
       try {
-        const response = await fetch(`http://${apiUrl}/api/chats/${chatId}/history`);
+        const response = await fetch(`https://${apiUrl}/api/chats/${chatId}/history`);
         const data = await response.json();
         setHistory(data);
       } catch (error) {

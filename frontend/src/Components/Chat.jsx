@@ -29,7 +29,7 @@ const Chat = ({ userId, chatId, history }) => {
   }, [displayMessages]);
 
   useEffect(() => {
-    const socketUrl = `ws://${apiUrl}/ws/chat/${userId}`;
+    const socketUrl = `wss://${apiUrl}/ws/chat/${userId}`;
     const socket = initializeWebSocket(socketUrl, (message) => {
       const parsedMessage = JSON.parse(message);
       dispatch(addMessage({"chat_id": chatId, "user_id": userId, "content": parsedMessage.message, is_bot: true}));

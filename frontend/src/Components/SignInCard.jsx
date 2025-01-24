@@ -65,7 +65,7 @@ export default function SignInCard({ purpose }) {
     const endpoint = purpose === 'login' ? 'login' : 'users';
     const payload = purpose === 'login' ? { username, password } : { username, password, email };
 
-    const response = await fetch(`http://${apiUrl}/api/${endpoint}`, {
+    const response = await fetch(`https://${apiUrl}/api/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
