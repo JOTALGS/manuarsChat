@@ -21,13 +21,13 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api", tags=["Chats", "Messages"])
 
+# WebSocket Configuration
 API_KEY = os.getenv("API_KEY")
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 chat = model.start_chat(history=[])
 
-# WebSocket Configuration
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     await manager.connect(websocket, user_id)

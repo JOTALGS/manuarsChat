@@ -1,12 +1,23 @@
 from fastapi import WebSocket
 from typing import Dict, List, Optional
 import time
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, Text, String, Float, Boolean, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker, Session
-from datetime import datetime
+from passlib.context import CryptContext
 
 Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    
+    user_id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), unique=True, nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(Float, default=time.time)
+    
+    messages = relationship("Message", back_populates="user")
 
 class Chat(Base):
     __tablename__ = "chats"
@@ -23,12 +34,13 @@ class Message(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     chat_id = Column(Integer, ForeignKey("chats.id"))
-    user_id = Column(Integer)
-    content = Column(String(1000))
+    user_id = Column(Integer, ForeignKey("users.user_id"))
+    content = Column(Text)
     timestamp = Column(Float, default=time.time)
     is_bot = Column(Boolean, default=False)
     
     chat = relationship("Chat", back_populates="messages")
+    user = relationship("User", back_populates="messages")
 
 # Database connection
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://madmin:mpassword@localhost/mchat_db"
@@ -137,3 +149,11 @@ class ConnectionManager:
         self.db.commit()
 
 manager = ConnectionManager()
+
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
