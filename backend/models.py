@@ -17,30 +17,33 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(Float, default=time.time)
     
-    messages = relationship("Message", back_populates="user")
+    chats = relationship("Chat", back_populates="user")
 
 class Chat(Base):
     __tablename__ = "chats"
     
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+
+    chat_counter = Column(Integer, nullable=False)
     chat_name = Column(String(255))
     created_at = Column(Float, default=time.time)
-    
+
     messages = relationship("Message", back_populates="chat")
+    user = relationship("User", back_populates="chats")
 
 
 class Message(Base):
     __tablename__ = "messages"
     
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, ForeignKey("chats.id"))
-    user_id = Column(Integer, ForeignKey("users.user_id"))
-    content = Column(Text)
+    chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)
+
+    content = Column(Text, nullable=False)
     timestamp = Column(Float, default=time.time)
     is_bot = Column(Boolean, default=False)
-    
+
     chat = relationship("Chat", back_populates="messages")
-    user = relationship("User", back_populates="messages")
 
 # Database connection
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://madmin:mpassword@localhost/mchat_db"
@@ -72,16 +75,22 @@ class ConnectionManager:
             del self.active_connections[user_id]
 
     def save_message(self, user_id: int, chat_id: int, content: str, chat_name: Optional[str] = None, is_bot: bool = False):
-        chat = self.db.query(Chat).filter(Chat.id == chat_id).first()
+        chat = (
+            self.db.query(Chat)
+            .filter(Chat.user_id == user_id, Chat.chat_counter == chat_id)
+            .first()
+        )
         if not chat:
-            chat = Chat(id=chat_id, chat_name=chat_name or f"Chat {chat_id}")
+            chat = Chat(chat_counter=chat_id, user_id=user_id, chat_name=chat_name or f"Chat {chat_id}")
             self.db.add(chat)
         elif chat_name:
             chat.chat_name = chat_name
 
+        print(chat)
+        self.db.commit()
+
         message = Message(
-            chat_id=chat_id,
-            user_id=user_id,
+            chat_id=chat.id,
             content=content,
             timestamp=time.time(),
             is_bot=is_bot
@@ -90,8 +99,7 @@ class ConnectionManager:
         self.db.commit()
         
         return {
-            "chat_id": chat_id,
-            "user_id": user_id,
+            "chat_counter": chat_id,
             "content": content,
             "timestamp": message.timestamp,
             "is_bot": is_bot
@@ -101,15 +109,18 @@ class ConnectionManager:
         if user_id in self.active_connections:
             await self.active_connections[user_id].send_text(message)
     
-    def get_chat_history(self, chat_id: int) -> Dict:
-        chat = self.db.query(Chat).filter(Chat.id == chat_id).first()
+    def get_chat_history(self, user_id: int, chat_id: int) -> Dict:
+        chat = (
+            self.db.query(Chat)
+            .filter(Chat.user_id == user_id, Chat.id == chat_id)
+            .first()
+        )
         if not chat:
             return {}
         
         messages = [
             {
                 "chat_id": msg.chat_id,
-                "user_id": msg.user_id,
                 "content": msg.content,
                 "timestamp": msg.timestamp,
                 "is_bot": msg.is_bot
@@ -119,11 +130,12 @@ class ConnectionManager:
         
         return {
             "chat_name": chat.chat_name,
+            "user_id": chat.user_id,
             "messages": messages
         }
     
-    def get_all_chats(self) -> list:
-        chats = self.db.query(Chat).all()
+    def get_all_chats(self, user_id: int) -> list:
+        chats = self.db.query(Chat).filter(Chat.user_id == user_id).all()
         if not chats:
             return {}
         
@@ -139,12 +151,19 @@ class ConnectionManager:
             "chats": chat_list
         }
 
-    def set_chat_name(self, chat_id: int, chat_name: str):
-        chat = self.db.query(Chat).filter(Chat.id == chat_id).first()
+    def set_chat_name(self, user_id: int, chat_id: int, chat_name: str):
+        # Find the chat by user_id and chat_id
+        chat = (
+            self.db.query(Chat)
+            .filter(Chat.user_id == user_id, Chat.chat_counter == chat_id)
+            .first()
+        )
         if not chat:
-            chat = Chat(id=chat_id, chat_name=chat_name)
+            # Create a new chat if it doesn't exist
+            chat = Chat(chat_counter=chat_id, user_id=user_id, chat_name=chat_name)
             self.db.add(chat)
         else:
+            # Update the chat name
             chat.chat_name = chat_name
         self.db.commit()
 

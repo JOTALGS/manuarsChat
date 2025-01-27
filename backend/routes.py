@@ -20,25 +20,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter()
 
-@router.get("/chats/{chat_id}/history")
-async def get_chat_history(chat_id: int) -> Dict:
+@router.get("/chats/{user_id}/{chat_id}/history")
+async def get_chat_history(user_id: int, chat_id: int) -> Dict:
     """Get the message history for a specific chat"""
-    return manager.get_chat_history(chat_id)
-
-
-
+    return manager.get_chat_history(user_id=user_id, chat_id=chat_id)
 
 @router.get("/chats/{user_id}")
 async def get_all_chats(user_id: int) -> Dict:
     """Get all chats for a specific user by querying messages"""
     db = manager.db
-    chats = (
-        db.query(Chat)
-        .join(Message, Chat.id == Message.chat_id)
-        .filter(Message.user_id == user_id)
-        .distinct()
-        .all()
-    )
+    chats = db.query(Chat).filter(Chat.user_id == user_id).all()
     serialized_chats = [{"chat_id": chat.id, "name": chat.chat_name} for chat in chats]  # Adjust fields
     return {"chats": serialized_chats}
 
