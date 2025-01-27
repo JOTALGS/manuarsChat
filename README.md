@@ -85,7 +85,7 @@ This project is a full-stack chat application designed to showcase the developme
 
 ### HISTORY
 - **Endpoint**: `GET /api/chats/1/2/history`
-- **Description**: Retrieves the chat history between user 1 and user 2.
+- **Description**: Retrieves the chat history of user's 1 chat 2.
 - **URL**: [https://manuarsclo.duckdns.org/api/chats/1/2/history](https://manuarsclo.duckdns.org/api/chats/1/2/history)
 - **Authentication**: None required.
 
