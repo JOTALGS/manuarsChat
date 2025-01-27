@@ -77,7 +77,7 @@ This project is a full-stack chat application designed to showcase the developme
 
 ### CHATS
 - **Endpoint**: `GET /api/chats/2`
-- **Description**: Retrieves information about chat with ID 2.
+- **Description**: Retrieves chats of user with ID 2.
 - **URL**: [https://manuarsclo.duckdns.org/api/chats/2](https://manuarsclo.duckdns.org/api/chats/2)
 - **Authentication**: None required.
 
