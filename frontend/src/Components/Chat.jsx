@@ -32,7 +32,7 @@ const Chat = ({ userId, chatId, history }) => {
     const socketUrl = `wss://${apiUrl}/ws/chat/${userId}`;
     const socket = initializeWebSocket(socketUrl, (message) => {
       const parsedMessage = JSON.parse(message);
-      dispatch(addMessage({"chat_id": chatId, "user_id": userId, "content": parsedMessage.message, is_bot: true}));
+      dispatch(addMessage({"chat_counter": chatId, "user_id": userId, "content": parsedMessage.message, is_bot: true}));
     });
 
     setWs(socket);
@@ -48,7 +48,7 @@ const Chat = ({ userId, chatId, history }) => {
       };
       
       ws.send(JSON.stringify(messageData));
-      dispatch(addMessage({"chat_id": chatId, "user_id": userId, "content": inputMessage.trim(), is_bot: false}));
+      dispatch(addMessage({"chat_counter": chatId, "user_id": userId, "content": inputMessage.trim(), is_bot: false}));
       dispatch(setInputMessage(''));
     }
   };

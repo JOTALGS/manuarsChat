@@ -39,7 +39,7 @@ const Home = () => {
         const data = await response.json();
         if (data.chats && data.chats.length > 0) {
           setChats(data.chats);
-          setChatId(data.chats[data.chats.length - 1].chat_id + 1);
+          setChatId(data.chats.length + 1);
         } else {
           setChats([]);
           setChatId(1);
@@ -52,7 +52,7 @@ const Home = () => {
     const handleChatClick = async (chatId) => {
       console.log('Clicked Chat ID:', chatId);
       try {
-        const response = await fetch(`https://${apiUrl}/api/chats/${chatId}/history`);
+        const response = await fetch(`https://${apiUrl}/api/chats/${userId}/${chatId}/history`);
         const data = await response.json();
         setHistory(data);
       } catch (error) {
